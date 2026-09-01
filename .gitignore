@@ -1,0 +1,11 @@
+*.vcd
+*.fst
+*.lxt
+*.out
+*.exe
+
+full_adder_sim
+
+__pycache__/
+.vscode/
+
