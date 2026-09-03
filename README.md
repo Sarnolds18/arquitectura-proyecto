@@ -85,19 +85,3 @@ make prog       # iceprog: programa la Go Board
 Requiere el toolchain IceStorm instalado y la FPGA conectada; no está disponible
 en todos los entornos de desarrollo (por ejemplo, no está instalado en WSL en
 este momento — probar en el laboratorio del curso o instalarlo aparte).
-
-### Estado del proyecto
-
-- [x] Sumador completo de 1 bit (`full_adder.v`)
-- [x] Sumador de 4 bits, ripple-carry (`adder4.v`)
-- [ ] Resta y resta inversa (complemento a dos)
-- [ ] Shift left / shift right
-- [ ] Selección de operación y de segundo operando
-- [ ] Registro de resultado + módulo top-level `calculadora_4bits`
-- [ ] Pines de la FPGA (`constraints/go-board.pcf`) e integración con botones/LEDs/displays
-- [ ] Demo en la FPGA (Nandland Go Board)
-
-### Informe
-
-El informe en PDF con el diseño general, tablas de verdad, mapas de Karnaugh,
-expresiones booleanas y resultados obtenidos se agrega antes de la entrega final.
