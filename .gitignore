@@ -10,3 +10,6 @@ __pycache__/
 .vscode/
 
 simulacion
+sim_full_adder
+sim_adder4
+build/

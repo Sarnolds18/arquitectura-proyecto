@@ -1,0 +1,12 @@
+# Nandland Go Board
+# FPGA: Lattice iCE40 HX1K
+# Package: VQ100
+#
+# TODO: pendiente. Todavía no tenemos el modulo top-level `calculadora_4bits`
+# con sus puertos de FPGA (botones, LEDs de operacion, displays de 7 segmentos)
+# definidos, asi que no hay pines reales que mapear aqui todavia.
+#
+# Cuando se defina esa interfaz, agregar aqui una linea `set_io <puerto> <pin>`
+# por cada senal fisica, usando el pinout oficial de la Go Board (ver ejemplo
+# del profesor en combinational/constraints/go-board.pcf: los pulsadores y LEDs
+# de ese ejemplo estan en los pines 53, 51 y 56 del package VQ100).
