@@ -21,23 +21,18 @@ assign a_shr1[2] = a[3];
 assign a_shr1[1] = a[2];
 assign a_shr1[0] = a[1];
 
-wire [3:0] shl1, shr1;
-mux2to1 m_dir0_0 (.a(a[0]), .b(a_shr1[0]), .sel(dir), .y(shr1[0]));
-mux2to1 m_dir0_1 (.a(a[1]), .b(a_shr1[1]), .sel(dir), .y(shr1[1]));
-mux2to1 m_dir0_2 (.a(a[2]), .b(a_shr1[2]), .sel(dir), .y(shr1[2]));
-mux2to1 m_dir0_3 (.a(a[3]), .b(a_shr1[3]), .sel(dir), .y(shr1[3]));
+// selecciona entre "desplazado 1 a la izquierda" y "desplazado 1 a la derecha"
+wire [3:0] shift1;
+mux2to1 m_dir0_0 (.a(a_shl1[0]), .b(a_shr1[0]), .sel(dir), .y(shift1[0]));
+mux2to1 m_dir0_1 (.a(a_shl1[1]), .b(a_shr1[1]), .sel(dir), .y(shift1[1]));
+mux2to1 m_dir0_2 (.a(a_shl1[2]), .b(a_shr1[2]), .sel(dir), .y(shift1[2]));
+mux2to1 m_dir0_3 (.a(a_shl1[3]), .b(a_shr1[3]), .sel(dir), .y(shift1[3]));
 
 // selecciona entre "sin desplazar" y "desplazado 1 en la direccion dir"
-wire [3:0] noshift1;
-mux2to1 m_pick0_0 (.a(a[0]), .b(a_shl1[0]), .sel(dir), .y(noshift1[0]));
-mux2to1 m_pick0_1 (.a(a[1]), .b(a_shl1[1]), .sel(dir), .y(noshift1[1]));
-mux2to1 m_pick0_2 (.a(a[2]), .b(a_shl1[2]), .sel(dir), .y(noshift1[2]));
-mux2to1 m_pick0_3 (.a(a[3]), .b(a_shl1[3]), .sel(dir), .y(noshift1[3]));
-
-mux2to1 m_amt0_0 (.a(a[0]),        .b(noshift1[0]), .sel(amount[0]), .y(stage0[0]));
-mux2to1 m_amt0_1 (.a(a[1]),        .b(noshift1[1]), .sel(amount[0]), .y(stage0[1]));
-mux2to1 m_amt0_2 (.a(a[2]),        .b(noshift1[2]), .sel(amount[0]), .y(stage0[2]));
-mux2to1 m_amt0_3 (.a(a[3]),        .b(noshift1[3]), .sel(amount[0]), .y(stage0[3]));
+mux2to1 m_amt0_0 (.a(a[0]), .b(shift1[0]), .sel(amount[0]), .y(stage0[0]));
+mux2to1 m_amt0_1 (.a(a[1]), .b(shift1[1]), .sel(amount[0]), .y(stage0[1]));
+mux2to1 m_amt0_2 (.a(a[2]), .b(shift1[2]), .sel(amount[0]), .y(stage0[2]));
+mux2to1 m_amt0_3 (.a(a[3]), .b(shift1[3]), .sel(amount[0]), .y(stage0[3]));
 
 // Etapa 1: desplazamiento de 2 posiciones sobre stage0, controlado por amount[1]
 wire [3:0] stage0_shl2, stage0_shr2, stage0_shift2;
