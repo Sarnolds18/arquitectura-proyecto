@@ -2,11 +2,72 @@
 # FPGA: Lattice iCE40 HX1K
 # Package: VQ100
 #
-# TODO: pendiente. Todavía no tenemos el modulo top-level `calculadora_4bits`
-# con sus puertos de FPGA (botones, LEDs de operacion, displays de 7 segmentos)
-# definidos, asi que no hay pines reales que mapear aqui todavia.
+# Pinout oficial de Nandland (Go_Board_Constraints.pcf, el mismo que enlaza
+# el enunciado del Proyecto 1), adaptado a los nombres de puerto reales de
+# src/top_fpga.v (el .pcf original usa nombres estilo i_Switch_1/o_LED_1,
+# que no calzan con nuestros puertos; nextpnr necesita coincidencia exacta
+# de nombres para asignar el pin).
 #
-# Cuando se defina esa interfaz, agregar aqui una linea `set_io <puerto> <pin>`
-# por cada senal fisica, usando el pinout oficial de la Go Board (ver ejemplo
-# del profesor en combinational/constraints/go-board.pcf: los pulsadores y LEDs
-# de ese ejemplo estan en los pines 53, 51 y 56 del package VQ100).
+# Cross-verificado 2026-09 contra el ejemplo del profesor (combinational.zip
+# -> constraints/go-board.pcf): switch_1=53, switch_2=51, LED_1=56 coinciden
+# exacto, asi que confiamos en el resto de los pines de la misma fuente.
+#
+# set_io <puerto_top_fpga> <pin_VQ100>
+
+### Reloj on-board, 25 MHz
+set_io clk 15
+
+### LEDs de usuario: led_codigo[2:0] muestra el codigo de operacion.
+# El board tiene 4 LEDs (pines 56,57,59,60); solo usamos 3. El pin 60 queda
+# libre -- candidato natural para el indicador de overflow (sugerido por el
+# profesor, ver CLAUDE.md / informe_borrador.md seccion 4) cuando se
+# implemente.
+set_io led_codigo[0] 56
+set_io led_codigo[1] 57
+set_io led_codigo[2] 59
+# set_io led_overflow 60   # TODO: cuando se implemente el indicador de overflow
+
+### Botones de entrada
+#
+# !! PENDIENTE DE VERIFICAR EN LA PLACA FISICA ANTES DE LA DEMO !!
+# Los pines de Nandland (53, 51, 54, 52) NO estan en orden fisico -- no se
+# puede deducir cual switch (i_Switch_1..4 en el pinout original) es cual
+# posicion fisica (superior izq. / inferior izq. / superior der. / inferior
+# der.) solo mirando el numero de pin. El mapeo de abajo (switch 1->btn_inc,
+# 2->btn_dec, 3->btn_confirm, 4->btn_usar_ant, en el mismo orden que lista
+# Nandland) es PROVISIONAL, no una posicion fisica confirmada. Probar en la
+# placa (por ejemplo con un LED que se prenda por switch, uno a la vez) y
+# reordenar estas 4 lineas segun corresponda -- reordenar el .pcf es
+# suficiente, no hace falta tocar top_fpga.v.
+#
+# Tambien falta confirmar la POLARIDAD: top_fpga.v asume botones activo-alto
+# (comentario en el propio archivo). Si resultan activo-bajo, invertir con
+# `not` antes de cada `debouncer` en top_fpga.v (no en el .pcf).
+set_io btn_inc      53
+set_io btn_dec       51
+set_io btn_confirm  54
+set_io btn_usar_ant 52
+
+### Display de 7 segmentos, digito 1 (izquierdo) -- signo
+set_io disp_signo_a 3
+set_io disp_signo_b 4
+set_io disp_signo_c 93
+set_io disp_signo_d 91
+set_io disp_signo_e 90
+set_io disp_signo_f 1
+set_io disp_signo_g 2
+
+### Display de 7 segmentos, digito 2 (derecho) -- magnitud en hex
+#
+# !! PENDIENTE DE VERIFICAR POLARIDAD !!
+# seven_seg_hex.v/seven_seg_signo.v asumen activo-alto (1 = segmento
+# encendido). Si el display de la Go Board es anodo comun (activo-bajo), hay
+# que invertir las 14 salidas de segmento con `not` en top_fpga.v -- un
+# blink de un solo segmento en la placa real lo confirma rapido.
+set_io disp_mag_a 100
+set_io disp_mag_b 99
+set_io disp_mag_c 97
+set_io disp_mag_d 95
+set_io disp_mag_e 94
+set_io disp_mag_f 8
+set_io disp_mag_g 96
