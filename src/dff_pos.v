@@ -4,7 +4,7 @@
 // (dos latches SR cruzados). Funcionalmente correcta y verificada en
 // simulacion (todos los testbenches del proyecto pasaban igual con esa
 // version), pero al correr place & route real con nextpnr sobre el
-// top-level completo (`top_fpga.v`) goldsaparecio un error real:
+// top-level completo (`top_fpga.v`) aparecio un error real:
 // "timing analysis failed due to presence of combinatorial loops". El
 // mapeo de yosys/ABC9 no siempre logra reconocer el par de `nand`
 // cruzados como una celda SB_DFF nativa una vez que el diseno completo se
