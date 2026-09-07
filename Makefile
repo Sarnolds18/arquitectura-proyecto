@@ -47,9 +47,10 @@ wave: sim
 # ---------------------------------------------------------
 # Sintesis FPGA (yosys + nextpnr-ice40 + icestorm)
 # ---------------------------------------------------------
-# Requiere el toolchain IceStorm (yosys, nextpnr-ice40, icepack, iceprog),
-# que no esta instalado en este entorno de desarrollo (WSL) -- correr estos
-# targets en una maquina que si lo tenga, o en el laboratorio del curso.
+# Requiere el toolchain IceStorm (yosys, nextpnr-ice40, icepack, iceprog).
+# Instalado y probado en este entorno de desarrollo desde 2026-09-03 -- solo
+# falta acceso USB a la placa fisica para el target `prog` (ver README/
+# CLAUDE.md).
 
 $(JSON): $(SRC) | $(BUILD)
 	yosys -p "read_verilog $(SRC); \
@@ -67,12 +68,20 @@ synth: $(JSON)
 # Place and route
 # ---------------------------------------------------------
 
+# --no-promote-globals: sin este flag, nextpnr intenta promover el reset y
+# el enable de cada uno de los 4 contadores internos de `debouncer` (dentro
+# de `top_fpga`) a buffers globales dedicados (SB_GB) y se queda sin
+# suficientes (la iCE40 HX1K solo tiene 8) -- falla con "Unable to find
+# legal placement". A 25MHz hay margen de timing de sobra (el diseno cierra
+# limpio a ~93MHz) para rutear esas senales por el fabric normal en vez de
+# por buffers dedicados.
 $(ASC): $(JSON) $(PCF)
 	nextpnr-ice40 \
 		--hx1k \
 		--package vq100 \
 		--json $(JSON) \
 		--pcf $(PCF) \
+		--no-promote-globals \
 		--asc $(ASC)
 
 pnr: $(ASC)
