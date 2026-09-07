@@ -33,16 +33,6 @@ module fsm_entrada(
 
 wire estado_sel_op, estado_sel_op1, estado_sel_op2, estado_mostrar;
 
-// --- registro de "usar resultado anterior", valido solo en SEL_OP2 ---
-// se fija con pulso_usar_ant durante SEL_OP2, se limpia al salir de SEL_OP2
-wire sel_op2_set, sel_op2_next;
-and (sel_op2_set, pulso_usar_ant, estado_sel_op2);
-mux2to1 sel_op2_mux (.a(1'b0), .b(sel_op2_set), .sel(estado_sel_op2), .y(sel_op2_next));
-// nota: cuando estado_sel_op2=1 el mux elige sel_op2_set (permite fijarlo o
-// mantenerlo en 0 si no se presiono); cuando estado_sel_op2=0 fuerza 0,
-// limpiando la seleccion al pasar de estado.
-dff_pos reg_usar_ant (.clk(clk), .d(sel_op2_next), .q(sel_op2));
-
 // --- transiciones de estado, one-hot ---
 // avanza de SEL_OP a SEL_OP1 al confirmar
 wire avanza_desde_op, avanza_desde_op1, avanza_desde_op2, avanza_desde_mostrar;
@@ -78,6 +68,23 @@ dff_pos reg_sel_op  (.clk(clk), .d(siguiente_sel_op),  .q(estado_sel_op));
 dff_pos reg_sel_op1 (.clk(clk), .d(siguiente_sel_op1), .q(estado_sel_op1));
 dff_pos reg_sel_op2 (.clk(clk), .d(siguiente_sel_op2), .q(estado_sel_op2));
 dff_pos reg_mostrar (.clk(clk), .d(siguiente_mostrar), .q(estado_mostrar));
+
+// --- registro de "usar resultado anterior", valido solo en SEL_OP2 ---
+// se fija con pulso_usar_ant durante SEL_OP2 y queda retenido (aunque el
+// pulso dure solo 1 ciclo) mientras se siga en SEL_OP2. El selector del mux
+// es `siguiente_sel_op2` (el PROXIMO estado, no el actual) para que el
+// registro se limpie en el mismo flanco en que la FSM sale de SEL_OP2, en
+// vez de un ciclo despues.
+wire sel_op2_set, sel_op2_or, sel_op2_next;
+and (sel_op2_set, pulso_usar_ant, estado_sel_op2);
+or  (sel_op2_or,  sel_op2_set,    sel_op2);
+mux2to1 sel_op2_mux (.a(1'b0), .b(sel_op2_or), .sel(siguiente_sel_op2), .y(sel_op2_next));
+// nota: si el proximo estado sigue siendo SEL_OP2, el mux elige
+// sel_op2_or = set | valor_actual (se fija con el pulso o se retiene lo que
+// ya tenia); si el proximo estado ya no es SEL_OP2 (se esta confirmando y
+// saliendo), fuerza 0 desde ya, limpiando la seleccion en el mismo flanco
+// en que cambia el estado.
+dff_pos reg_usar_ant (.clk(clk), .d(sel_op2_next), .q(sel_op2));
 
 buf (activo_op,  estado_sel_op);
 buf (activo_op1, estado_sel_op1);
