@@ -34,8 +34,8 @@ initial begin
             2:  esperado = 7'b1101101;
             3:  esperado = 7'b1111001;
             4:  esperado = 7'b0110011;
-            5:  esperado = 7'b1101011;
-            6:  esperado = 7'b1101111;
+            5:  esperado = 7'b1011011;
+            6:  esperado = 7'b1011111;
             7:  esperado = 7'b1110000;
             8:  esperado = 7'b1111111;
             9:  esperado = 7'b1111011;

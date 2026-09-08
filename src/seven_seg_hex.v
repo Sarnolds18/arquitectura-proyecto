@@ -12,9 +12,16 @@
 //
 // Tabla de verdad (entrada in[3:0] -> segmentos abcdefg):
 //  0: 1111110   4: 0110011   8: 1111111   C: 1001110
-//  1: 0110000   5: 1101011   9: 1111011   D: 0111101
-//  2: 1101101   6: 1101111   A: 1110111   E: 1001111
+//  1: 0110000   5: 1011011   9: 1111011   D: 0111101
+//  2: 1101101   6: 1011111   A: 1110111   E: 1001111
 //  3: 1111001   7: 1110000   B: 0011111   F: 1000111
+//
+// (5 y 6 corregidos 2026-09-08: la version anterior tenia b y c
+// invertidos -- 1101011/1101111 en vez de 1011011/1011111 -- error de
+// tipeo al armar la tabla, no detectado en simulacion porque
+// sim/seven_seg_hex_tb.v tenia copiado el mismo error. Confirmado en la
+// placa fisica: el "5" y el "6" se veian con el segmento b encendido en
+// vez de c.)
 
 module seven_seg_hex(
     input  [3:0] in,
@@ -35,13 +42,13 @@ mux16to1 mux_a (
 );
 
 mux16to1 mux_b (
-    .in0(1'b1),.in1(1'b1),.in2(1'b1),.in3(1'b1),.in4(1'b1),.in5(1'b1),.in6(1'b1),.in7(1'b1),
+    .in0(1'b1),.in1(1'b1),.in2(1'b1),.in3(1'b1),.in4(1'b1),.in5(1'b0),.in6(1'b0),.in7(1'b1),
     .in8(1'b1),.in9(1'b1),.in10(1'b1),.in11(1'b0),.in12(1'b0),.in13(1'b1),.in14(1'b0),.in15(1'b0),
     .sel(in), .y(seg_b)
 );
 
 mux16to1 mux_c (
-    .in0(1'b1),.in1(1'b1),.in2(1'b0),.in3(1'b1),.in4(1'b1),.in5(1'b0),.in6(1'b0),.in7(1'b1),
+    .in0(1'b1),.in1(1'b1),.in2(1'b0),.in3(1'b1),.in4(1'b1),.in5(1'b1),.in6(1'b1),.in7(1'b1),
     .in8(1'b1),.in9(1'b1),.in10(1'b1),.in11(1'b1),.in12(1'b0),.in13(1'b1),.in14(1'b0),.in15(1'b0),
     .sel(in), .y(seg_c)
 );
