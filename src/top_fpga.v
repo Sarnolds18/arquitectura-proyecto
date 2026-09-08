@@ -19,6 +19,7 @@ module top_fpga(
     input  btn_usar_ant,
 
     output [2:0] led_codigo,
+    output       led_overflow,
 
     output disp_signo_a, output disp_signo_b, output disp_signo_c, output disp_signo_d,
     output disp_signo_e, output disp_signo_f, output disp_signo_g,
@@ -68,12 +69,14 @@ buf (reset_inicial, reset_inicial_reg);
 // FSM de entrada
 // ------------------------------------------------------------------
 wire activo_op, activo_op1, activo_op2, sel_op2, ejecutar_pulso;
+wire reset_op1, reset_op2;
 
 fsm_entrada fsm (
     .clk(clk), .reset(reset_inicial),
     .pulso_confirm(pulso_confirm), .pulso_usar_ant(pulso_usar_ant),
     .activo_op(activo_op), .activo_op1(activo_op1), .activo_op2(activo_op2),
-    .sel_op2(sel_op2), .ejecutar_pulso(ejecutar_pulso)
+    .sel_op2(sel_op2), .ejecutar_pulso(ejecutar_pulso),
+    .reset_op1(reset_op1), .reset_op2(reset_op2)
 );
 
 // ------------------------------------------------------------------
@@ -93,14 +96,26 @@ and (pulso_dec_op2,    pulso_dec, activo_op2);
 wire [2:0] codigo;
 wire [3:0] op1, op2_ext;
 
+// op1/op2 se reinician a 0000 cada vez que se ENTRA a su estado de edicion
+// (SEL_OP -> SEL_OP1 y SEL_OP1 -> SEL_OP2 respectivamente), ademas del
+// reset de arranque de la placa: cada operando nuevo arranca desde cero en
+// vez de conservar el valor del ingreso anterior (decision de diseno, ver
+// informe seccion 4). El codigo de operacion NO se reinicia al confirmar
+// -- solo en el arranque -- para no perder la operacion seleccionada al
+// volver de MOSTRAR a SEL_OP (ver top_fpga_tb.v).
+wire reset_op1_total, reset_op2_total;
+or (reset_op1_total, reset_inicial, reset_op1);
+or (reset_op2_total, reset_inicial, reset_op2);
+
 contador_updown3 cont_codigo (.clk(clk), .pulso_inc(pulso_inc_codigo), .pulso_dec(pulso_dec_codigo), .reset(reset_inicial), .valor(codigo));
-contador_updown4 cont_op1    (.clk(clk), .pulso_inc(pulso_inc_op1),    .pulso_dec(pulso_dec_op1),    .reset(reset_inicial), .valor(op1));
-contador_updown4 cont_op2    (.clk(clk), .pulso_inc(pulso_inc_op2),    .pulso_dec(pulso_dec_op2),    .reset(reset_inicial), .valor(op2_ext));
+contador_updown4 cont_op1    (.clk(clk), .pulso_inc(pulso_inc_op1),    .pulso_dec(pulso_dec_op1),    .reset(reset_op1_total), .valor(op1));
+contador_updown4 cont_op2    (.clk(clk), .pulso_inc(pulso_inc_op2),    .pulso_dec(pulso_dec_op2),    .reset(reset_op2_total), .valor(op2_ext));
 
 // ------------------------------------------------------------------
 // Calculadora
 // ------------------------------------------------------------------
 wire [3:0] resultado;
+wire       overflow;
 
 calculadora_4bits calc (
     .clk(clk),
@@ -109,15 +124,17 @@ calculadora_4bits calc (
     .sel_op2(sel_op2),
     .op1(op1),
     .op2_ext(op2_ext),
-    .resultado(resultado)
+    .resultado(resultado),
+    .overflow(overflow)
 );
 
 // ------------------------------------------------------------------
-// LEDs: codigo de operacion
+// LEDs: codigo de operacion + indicador de overflow (opcional)
 // ------------------------------------------------------------------
 buf (led_codigo[0], codigo[0]);
 buf (led_codigo[1], codigo[1]);
 buf (led_codigo[2], codigo[2]);
+buf (led_overflow, overflow);
 
 // ------------------------------------------------------------------
 // Displays: durante SEL_OP1 muestra op1, durante SEL_OP2 muestra op2_ext,

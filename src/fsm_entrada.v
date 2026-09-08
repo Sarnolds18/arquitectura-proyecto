@@ -15,6 +15,10 @@
 //   sel_op2       : 1 si se debe usar el resultado anterior como op2
 //   ejecutar_pulso: pulso de 1 ciclo hacia calculadora_4bits.ejecutar,
 //     generado al confirmar op2 (transicion SEL_OP2 -> MOSTRAR)
+//   reset_op1     : pulso de 1 ciclo al entrar a SEL_OP1 (SEL_OP -> SEL_OP1),
+//     limpia el contador de op1 para que el siguiente ingreso arranque en 0
+//   reset_op2     : pulso de 1 ciclo al entrar a SEL_OP2 (SEL_OP1 -> SEL_OP2),
+//     mismo motivo para el contador de op2
 //
 // Estados codificados en one-hot (registros individuales, sin `case`),
 // usando exclusivamente flip-flops + compuertas para las transiciones.
@@ -28,7 +32,9 @@ module fsm_entrada(
     output activo_op1,
     output activo_op2,
     output sel_op2,
-    output ejecutar_pulso
+    output ejecutar_pulso,
+    output reset_op1,
+    output reset_op2
 );
 
 wire estado_sel_op, estado_sel_op1, estado_sel_op2, estado_mostrar;
@@ -90,5 +96,7 @@ buf (activo_op,  estado_sel_op);
 buf (activo_op1, estado_sel_op1);
 buf (activo_op2, estado_sel_op2);
 buf (ejecutar_pulso, avanza_desde_op2);
+buf (reset_op1, avanza_desde_op);
+buf (reset_op2, avanza_desde_op1);
 
 endmodule

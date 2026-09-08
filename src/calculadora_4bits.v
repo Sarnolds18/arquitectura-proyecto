@@ -5,7 +5,8 @@ module calculadora_4bits (
     input  wire       sel_op2,
     input  wire [3:0] op1,
     input  wire [3:0] op2_ext,
-    output wire [3:0] resultado
+    output wire [3:0] resultado,
+    output wire       overflow
 );
 
 wire [3:0] op2;
@@ -60,6 +61,19 @@ registro4 registro (
     .ejecutar(ejecutar),
     .d(siguiente_resultado),
     .q(resultado)
+);
+
+// indicador de overflow con signo (opcional, sugerido por el profesor):
+// combinacional sobre op1/op2/codigo actuales, igual que led_codigo ya se
+// muestra en vivo mientras se edita, no solo tras ejecutar.
+overflow_detect ov (
+    .codigo(codigo),
+    .op1(op1),
+    .op2(op2),
+    .suma(suma),
+    .resta(resta),
+    .resta_inv(resta_inv),
+    .overflow(overflow)
 );
 
 endmodule

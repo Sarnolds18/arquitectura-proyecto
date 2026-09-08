@@ -17,15 +17,13 @@
 ### Reloj on-board, 25 MHz
 set_io clk 15
 
-### LEDs de usuario: led_codigo[2:0] muestra el codigo de operacion.
-# El board tiene 4 LEDs (pines 56,57,59,60); solo usamos 3. El pin 60 queda
-# libre -- candidato natural para el indicador de overflow (sugerido por el
-# profesor, ver CLAUDE.md / informe_borrador.md seccion 4) cuando se
-# implemente.
+### LEDs de usuario: led_codigo[2:0] muestra el codigo de operacion,
+# led_overflow indica overflow con signo (opcional, sugerido por el
+# profesor -- ver overflow_detect.v).
 set_io led_codigo[0] 56
 set_io led_codigo[1] 57
 set_io led_codigo[2] 59
-# set_io led_overflow 60   # TODO: cuando se implemente el indicador de overflow
+set_io led_overflow  60
 
 ### Botones de entrada
 #

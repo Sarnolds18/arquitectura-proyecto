@@ -9,13 +9,14 @@ module top_fpga_tb;
 
 reg clk, btn_inc, btn_dec, btn_confirm, btn_usar_ant;
 wire [2:0] led_codigo;
+wire led_overflow;
 wire disp_signo_a, disp_signo_b, disp_signo_c, disp_signo_d, disp_signo_e, disp_signo_f, disp_signo_g;
 wire disp_mag_a, disp_mag_b, disp_mag_c, disp_mag_d, disp_mag_e, disp_mag_f, disp_mag_g;
 
 top_fpga dut (
     .clk(clk),
     .btn_inc(btn_inc), .btn_dec(btn_dec), .btn_confirm(btn_confirm), .btn_usar_ant(btn_usar_ant),
-    .led_codigo(led_codigo),
+    .led_codigo(led_codigo), .led_overflow(led_overflow),
     .disp_signo_a(disp_signo_a), .disp_signo_b(disp_signo_b), .disp_signo_c(disp_signo_c), .disp_signo_d(disp_signo_d),
     .disp_signo_e(disp_signo_e), .disp_signo_f(disp_signo_f), .disp_signo_g(disp_signo_g),
     .disp_mag_a(disp_mag_a), .disp_mag_b(disp_mag_b), .disp_mag_c(disp_mag_c), .disp_mag_d(disp_mag_d),
@@ -112,6 +113,42 @@ initial begin
         $display("FAIL: codigo deberia conservar su valor (001) al volver a SEL_OP, obtenido %b", led_codigo);
     else
         $display("PASS: ciclo completo, vuelve a SEL_OP conservando el codigo previo, listo para editar una nueva operacion");
+
+    // --- reset de operandos al confirmar (decision de diseno, ver informe seccion 4) ---
+    // codigo ya esta en SUMA (001) desde el bloque anterior; se mantiene tal cual.
+    confirmar(); // SEL_OP -> SEL_OP1
+
+    // op1 = 5 (0101): 5 incrementos
+    incrementar_n_veces(5);
+    confirmar(); // SEL_OP1 -> SEL_OP2, esto debe resetear op1... pero ya no importa,
+                 // lo que se verifica es que op2_ext arranca en 0000 al entrar a SEL_OP2
+
+    // display en SEL_OP2 muestra op2_ext (magnitud 0, signo positivo) antes de tocar nada.
+    // "0" en el display de 7 segmentos activo-alto es 1111110 (a-f encendidos, g apagado),
+    // no 0000000 -- ver tabla de seven_seg_hex.v en el informe seccion 2.12.
+    if ({disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b1111110)
+        $display("FAIL: op2 deberia arrancar en 0000 al entrar a SEL_OP2, magnitud obtenida %b%b%b%b%b%b%b (esperado digito '0' = 1111110)",
+                  disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g);
+    else
+        $display("PASS: op2 arranca en 0000 al entrar a SEL_OP2 (reset por confirmar op1)");
+
+    // op2 = 3 (0011): 3 incrementos, luego confirmar -> ejecuta 5+3=8 (overflow: fuera de [-8,7]... en realidad 8 cae fuera del rango positivo de 4 bits con signo)
+    incrementar_n_veces(3);
+    confirmar(); // SEL_OP2 -> MOSTRAR, ejecuta 5+3=8 -> overflow con signo
+
+    if (led_overflow !== 1'b1)
+        $display("FAIL: led_overflow deberia ser 1 tras 5+3=8 (overflow con signo), obtenido %b", led_overflow);
+    else
+        $display("PASS: led_overflow=1 tras suma con overflow (5+3=8)");
+
+    confirmar(); // MOSTRAR -> SEL_OP, listo para una nueva operacion
+    confirmar(); // SEL_OP -> SEL_OP1, esto debe resetear op1 a 0000 tambien
+
+    if ({disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g} !== 7'b0000000 ||
+        {disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b1111110)
+        $display("FAIL: op1 deberia arrancar en 0000 al entrar a SEL_OP1 (segunda vez)");
+    else
+        $display("PASS: op1 arranca en 0000 al entrar a SEL_OP1 (segunda vez, confirma que el reset se repite en cada ciclo)");
 
     $display("FIN top_fpga_tb");
     $finish;

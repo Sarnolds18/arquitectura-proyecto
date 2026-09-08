@@ -3,13 +3,14 @@
 module fsm_entrada_tb;
 
 reg  clk, reset, pulso_confirm, pulso_usar_ant;
-wire activo_op, activo_op1, activo_op2, sel_op2, ejecutar_pulso;
+wire activo_op, activo_op1, activo_op2, sel_op2, ejecutar_pulso, reset_op1, reset_op2;
 
 fsm_entrada uut (
     .clk(clk), .reset(reset),
     .pulso_confirm(pulso_confirm), .pulso_usar_ant(pulso_usar_ant),
     .activo_op(activo_op), .activo_op1(activo_op1), .activo_op2(activo_op2),
-    .sel_op2(sel_op2), .ejecutar_pulso(ejecutar_pulso)
+    .sel_op2(sel_op2), .ejecutar_pulso(ejecutar_pulso),
+    .reset_op1(reset_op1), .reset_op2(reset_op2)
 );
 
 always #5 clk = ~clk;
@@ -35,13 +36,33 @@ initial begin
     else
         $display("PASS: estado inicial SEL_OP");
 
-    confirmar(); // SEL_OP -> SEL_OP1
+    // reset_op1 debe pulsar exactamente en el ciclo de la transicion
+    // SEL_OP -> SEL_OP1 (verificado antes de que confirmar() suelte el pulso)
+    pulso_confirm = 1'b1;
+    #1;
+    if (reset_op1 !== 1'b1)
+        $display("FAIL: reset_op1 deberia ser 1 al confirmar en SEL_OP, obtenido %b", reset_op1);
+    else
+        $display("PASS: reset_op1=1 al entrar a SEL_OP1");
+    @(posedge clk); #1;
+    pulso_confirm = 1'b0;
+
     if ({activo_op, activo_op1, activo_op2} !== 3'b010)
         $display("FAIL: tras 1er confirm deberia ser SEL_OP1, obtenido %b%b%b", activo_op, activo_op1, activo_op2);
     else
         $display("PASS: tras confirmar, SEL_OP1");
 
-    confirmar(); // SEL_OP1 -> SEL_OP2
+    // reset_op2 debe pulsar exactamente en el ciclo de la transicion
+    // SEL_OP1 -> SEL_OP2
+    pulso_confirm = 1'b1;
+    #1;
+    if (reset_op2 !== 1'b1)
+        $display("FAIL: reset_op2 deberia ser 1 al confirmar en SEL_OP1, obtenido %b", reset_op2);
+    else
+        $display("PASS: reset_op2=1 al entrar a SEL_OP2");
+    @(posedge clk); #1;
+    pulso_confirm = 1'b0;
+
     if ({activo_op, activo_op1, activo_op2} !== 3'b001)
         $display("FAIL: tras 2do confirm deberia ser SEL_OP2, obtenido %b%b%b", activo_op, activo_op1, activo_op2);
     else
