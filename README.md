@@ -2,8 +2,9 @@
 
 ## Diseño Lógico y FPGA
 
-Calculadora de 4 bits implementada en Verilog utilizando compuertas lógicas, para
-implementar en una FPGA Lattice iCE40 HX1K de la Nandland Go Board.
+Calculadora de 4 bits implementada en Verilog utilizando exclusivamente compuertas
+lógicas para la parte combinacional, para implementar en una FPGA Lattice iCE40
+HX1K de la Nandland Go Board.
 
 ### Integrantes
 
@@ -14,46 +15,58 @@ implementar en una FPGA Lattice iCE40 HX1K de la Nandland Go Board.
 ### Estructura del repositorio
 
 ```
-proyecto1/
-├── Makefile               # Automatiza compilar, simular, sintetizar y programar la FPGA
-├── src/                   # Módulos de diseño (Verilog)
-│   ├── full_adder.v       # Sumador completo de 1 bit
-│   └── adder4.v           # Sumador de 4 bits (ripple-carry sobre full_adder)
-├── sim/                   # Testbenches
-│   ├── full_adder_tb.v
-│   ├── adder4_tb.v
+arquitectura-proyecto/
+├── Makefile                 # Automatiza compilar, simular, sintetizar y programar la FPGA
+├── src/                     # Módulos de diseño (Verilog), a nivel de compuertas
+│   ├── full_adder.v         # Sumador completo de 1 bit
+│   ├── adder4.v             # Sumador de 4 bits (ripple-carry sobre full_adder)
+│   ├── restador4.v          # Resta y resta inversa por complemento a 2, sobre adder4
+│   ├── shifter4.v           # Barrel shifter de 4 bits
+│   ├── mux2to1.v / mux8to1.v / mux16to1.v
+│   ├── opsel4.v             # Selector de operación (código de 3 bits)
+│   ├── op2sel4.v            # Selector de segundo operando
+│   ├── overflow_detect.v    # Indicador de overflow con signo (opcional)
+│   ├── dff_pos.v / dff_en.v / registro4.v   # Elementos secuenciales
+│   ├── calculadora_4bits.v  # Núcleo de la calculadora (interfaz del tb oficial)
+│   ├── signo_magnitud4.v / seven_seg_hex.v / seven_seg_signo.v  # Displays
+│   ├── edge_detect.v / debouncer.v          # Soporte de entrada de botones
+│   ├── contador_updown3.v / contador_updown4.v  # Contadores editables (código/op1/op2)
+│   ├── fsm_entrada.v        # FSM del flujo de botones (SEL_OP → SEL_OP1 → SEL_OP2 → MOSTRAR)
+│   └── top_fpga.v           # Top-level real de la FPGA: conecta todo lo anterior
+├── sim/                     # Testbenches (uno por módulo, patrón <módulo>_tb.v)
 │   └── calculadora_4bits_tb_basico.sv   # Testbench de referencia (entregado por el curso)
 ├── constraints/
-│   └── go-board.pcf       # Pines de la Nandland Go Board (pendiente de completar)
-└── build/                 # Artefactos generados (ignorado por git)
+│   └── go-board.pcf         # Pines reales de la Nandland Go Board (VQ100)
+└── build/                   # Artefactos generados (ignorado por git)
 ```
 
-El módulo top-level `calculadora_4bits` (con la interfaz que espera el testbench
-de referencia) todavía no existe — es el próximo paso grande del proyecto.
+El diseño completo está implementado: los 23 módulos en `src/` y su testbench
+correspondiente en `sim/` (uno por módulo, más `top_fpga_tb.v` end-to-end).
+`top_fpga.v` es el módulo top-level real que se sintetiza y programa en la
+placa; `calculadora_4bits.v` es el núcleo combinacional/registrado que expone
+la interfaz que espera el testbench de referencia del curso.
 
 ### Requisitos
 
 - [Icarus Verilog](http://iverilog.icarus.com/) (`iverilog`, `vvp`) — con soporte
   `-g2012` (SystemVerilog), necesario para el testbench de referencia.
 - [GTKWave](http://gtkwave.sourceforge.net/) para ver las formas de onda.
-- Para sintetizar y programar la FPGA real: toolchain IceStorm
-  (`yosys`, `nextpnr-ice40`, `icepack`, `iceprog`). No es necesario para simular.
+- Toolchain IceStorm (`yosys`, `nextpnr-ice40`, `icepack`, `iceprog`) para
+  sintetizar y programar la FPGA real. Instalada y probada en este entorno de
+  desarrollo; solo `make prog` requiere acceso USB a la placa física.
 
 ### Simulación
 
 Con `make` (recomendado):
 
 ```bash
-# Simula el entregable final (calculadora_4bits + testbench de referencia).
-# Todavía falla porque calculadora_4bits.v no existe aún.
+# Simula el entregable final (calculadora_4bits + testbench de referencia del curso).
 make sim
 
-# Simular un submódulo suelto durante el desarrollo:
-make sim  TOP=adder4 TB=sim/adder4_tb.v
-make wave TOP=adder4 TB=sim/adder4_tb.v      # además abre GTKWave
-
-make sim  TOP=full_adder TB=sim/full_adder_tb.v
-make wave TOP=full_adder TB=sim/full_adder_tb.v
+# Simular cualquier otro módulo/testbench del proyecto:
+make sim  TOP=top_fpga TB=sim/top_fpga_tb.v          # flujo completo end-to-end
+make sim  TOP=adder4   TB=sim/adder4_tb.v
+make wave TOP=adder4   TB=sim/adder4_tb.v            # además abre GTKWave
 
 make clean   # borra build/ y los .vcd generados
 ```
@@ -75,13 +88,23 @@ demás.
 
 ### Síntesis y FPGA
 
+El top-level real para la FPGA es `top_fpga` (no `calculadora_4bits`, que es
+solo el núcleo interno), así que hay que pasarlo explícitamente con `TOP`:
+
 ```bash
-make synth      # yosys: genera build/calculadora_4bits.json
-make pnr        # nextpnr-ice40: place & route -> build/calculadora_4bits.asc
-make bitstream  # icepack: genera build/calculadora_4bits.bin
-make prog       # iceprog: programa la Go Board
+make synth     TOP=top_fpga   # yosys: genera build/top_fpga.json
+make pnr       TOP=top_fpga   # nextpnr-ice40: place & route -> build/top_fpga.asc
+make bitstream TOP=top_fpga   # icepack: genera build/top_fpga.bin
+make prog      TOP=top_fpga   # iceprog: programa la Go Board
 ```
 
-Requiere el toolchain IceStorm instalado y la FPGA conectada; no está disponible
-en todos los entornos de desarrollo (por ejemplo, no está instalado en WSL en
-este momento — probar en el laboratorio del curso o instalarlo aparte).
+El flujo completo (`synth` → `pnr` → `bitstream`) ya se validó en este entorno:
+sintetiza sin errores y el place & route cierra timing con amplio margen sobre
+el reloj de 25 MHz de la placa. Solo `make prog` requiere la FPGA físicamente
+conectada por USB.
+
+`constraints/go-board.pcf` ya tiene los pines reales de la Nandland Go Board
+(package VQ100) para clk, botones, LEDs y displays. Quedan 3 puntos marcados
+`!! PENDIENTE !!` en el propio archivo que solo se pueden confirmar con la
+placa en mano: orden físico de los 4 botones, polaridad de los botones y
+polaridad del display de 7 segmentos (activo-alto vs. ánodo común).
