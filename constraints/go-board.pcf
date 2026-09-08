@@ -47,6 +47,15 @@ set_io btn_confirm  54
 set_io btn_usar_ant 52
 
 ### Display de 7 segmentos, digito 1 (izquierdo) -- signo
+#
+# NOTA: se encontro un cruce b<->c en los pines del digito de magnitud (ver
+# abajo), corregido tras verificarlo en la placa. Estos pines de b/c del
+# digito de signo NO se pudieron verificar de la misma forma porque
+# seven_seg_signo.v solo enciende "todo apagado" o "solo g" -- nunca un
+# patron que use b o c por separado, asi que un cruce igual acá no se
+# notaria a simple vista. Sin evidencia de que este mal, se dejan como
+# estaban; si en algun momento se cambia seven_seg_signo.v para mostrar
+# algo mas que un guion, revisar esto primero.
 set_io disp_signo_a 3
 set_io disp_signo_b 4
 set_io disp_signo_c 93
@@ -57,11 +66,16 @@ set_io disp_signo_g 2
 
 ### Display de 7 segmentos, digito 2 (derecho) -- magnitud en hex
 #
-# !! PENDIENTE DE VERIFICAR POLARIDAD !!
-# seven_seg_hex.v/seven_seg_signo.v asumen activo-alto (1 = segmento
-# encendido). Si el display de la Go Board es anodo comun (activo-bajo), hay
-# que invertir las 14 salidas de segmento con `not` en top_fpga.v -- un
-# blink de un solo segmento en la placa real lo confirma rapido.
+# Polaridad confirmada en la placa fisica (2026-09-08): activo-bajo (anodo
+# comun) -- ya invertido con `not` en top_fpga.v.
+#
+# NOTA (2026-09-08): en un momento se sospecho un cruce de pines b/c aca
+# (los digitos "5" y "6" se veian mal), pero resulto ser un bug en la TABLA
+# de `src/seven_seg_hex.v` (b y c invertidos solo para esos dos digitos),
+# no en el pinout -- se llego a probar swapear b<->c aca, lo cual "arreglaba"
+# 5/6 por coincidencia pero rompia el digito "2" (que ya estaba bien). Se
+# revirtio a la asignacion original (correcta) y se corrigio el bug real en
+# seven_seg_hex.v. Ver revision en CLAUDE.md / informe.
 set_io disp_mag_a 100
 set_io disp_mag_b 99
 set_io disp_mag_c 97

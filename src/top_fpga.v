@@ -159,16 +159,43 @@ wire [3:0] magnitud;
 
 signo_magnitud4 conv_display (.valor(valor_a_mostrar), .signo(signo), .magnitud(magnitud));
 
+// seven_seg_signo/seven_seg_hex producen segmentos activo-alto (1 = segmento
+// encendido). La Go Board tiene el display en anodo comun (activo-bajo: 0 =
+// encendido) -- confirmado en la placa fisica el 2026-09-08 (con op1=0000 se
+// veia el digito de signo como un "8" completo y el de magnitud como un
+// guion en el segmento del medio, exactamente el patron esperado si se
+// manda "todo apagado"/"0" activo-alto a un display activo-bajo). Se
+// invierten las 14 salidas con `not` justo antes de los pines fisicos, sin
+// tocar la logica interna de los decodificadores.
+wire signo_a_ah, signo_b_ah, signo_c_ah, signo_d_ah, signo_e_ah, signo_f_ah, signo_g_ah;
+wire mag_a_ah, mag_b_ah, mag_c_ah, mag_d_ah, mag_e_ah, mag_f_ah, mag_g_ah;
+
 seven_seg_signo disp_signo (
     .signo(signo),
-    .seg_a(disp_signo_a), .seg_b(disp_signo_b), .seg_c(disp_signo_c), .seg_d(disp_signo_d),
-    .seg_e(disp_signo_e), .seg_f(disp_signo_f), .seg_g(disp_signo_g)
+    .seg_a(signo_a_ah), .seg_b(signo_b_ah), .seg_c(signo_c_ah), .seg_d(signo_d_ah),
+    .seg_e(signo_e_ah), .seg_f(signo_f_ah), .seg_g(signo_g_ah)
 );
 
 seven_seg_hex disp_magnitud (
     .in(magnitud),
-    .seg_a(disp_mag_a), .seg_b(disp_mag_b), .seg_c(disp_mag_c), .seg_d(disp_mag_d),
-    .seg_e(disp_mag_e), .seg_f(disp_mag_f), .seg_g(disp_mag_g)
+    .seg_a(mag_a_ah), .seg_b(mag_b_ah), .seg_c(mag_c_ah), .seg_d(mag_d_ah),
+    .seg_e(mag_e_ah), .seg_f(mag_f_ah), .seg_g(mag_g_ah)
 );
+
+not (disp_signo_a, signo_a_ah);
+not (disp_signo_b, signo_b_ah);
+not (disp_signo_c, signo_c_ah);
+not (disp_signo_d, signo_d_ah);
+not (disp_signo_e, signo_e_ah);
+not (disp_signo_f, signo_f_ah);
+not (disp_signo_g, signo_g_ah);
+
+not (disp_mag_a, mag_a_ah);
+not (disp_mag_b, mag_b_ah);
+not (disp_mag_c, mag_c_ah);
+not (disp_mag_d, mag_d_ah);
+not (disp_mag_e, mag_e_ah);
+not (disp_mag_f, mag_f_ah);
+not (disp_mag_g, mag_g_ah);
 
 endmodule

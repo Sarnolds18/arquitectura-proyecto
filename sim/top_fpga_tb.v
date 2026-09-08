@@ -90,16 +90,24 @@ initial begin
     incrementar_n_veces(4);
     confirmar(); // SEL_OP2 -> MOSTRAR, dispara ejecutar_pulso
 
-    // magnitud esperada = 7 (0111) -> 7 segmentos de "7": a,b,c encendidos
-    // signo esperado = positivo -> display de signo todo apagado
-    if ({disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g} !== 7'b0000000)
+    // Display de la Go Board confirmado activo-bajo en la placa fisica
+    // (2026-09-08, ver top_fpga.v): seven_seg_signo/seven_seg_hex calculan
+    // internamente en activo-alto, pero top_fpga.v invierte las 14 salidas
+    // con `not` justo antes de los pines. Los valores esperados aca abajo
+    // son el patron activo-alto ya invertido bit a bit.
+    //
+    // magnitud esperada = 7 (0111) -> "7" activo-alto = a,b,c encendidos =
+    // 1110000, invertido (activo-bajo) = 0001111
+    // signo esperado = positivo -> activo-alto todo apagado = 0000000,
+    // invertido = 1111111
+    if ({disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g} !== 7'b1111111)
         $display("FAIL: display de signo deberia estar apagado (positivo), obtenido %b%b%b%b%b%b%b",
                   disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g);
     else
         $display("PASS: display de signo apagado (resultado positivo)");
 
-    if ({disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b1110000)
-        $display("FAIL: display de magnitud deberia mostrar 7 (1110000), obtenido %b%b%b%b%b%b%b",
+    if ({disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b0001111)
+        $display("FAIL: display de magnitud deberia mostrar 7 (activo-bajo 0001111), obtenido %b%b%b%b%b%b%b",
                   disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g);
     else
         $display("PASS: display de magnitud muestra 7 (3+4=7)");
@@ -124,10 +132,11 @@ initial begin
                  // lo que se verifica es que op2_ext arranca en 0000 al entrar a SEL_OP2
 
     // display en SEL_OP2 muestra op2_ext (magnitud 0, signo positivo) antes de tocar nada.
-    // "0" en el display de 7 segmentos activo-alto es 1111110 (a-f encendidos, g apagado),
-    // no 0000000 -- ver tabla de seven_seg_hex.v en el informe seccion 2.12.
-    if ({disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b1111110)
-        $display("FAIL: op2 deberia arrancar en 0000 al entrar a SEL_OP2, magnitud obtenida %b%b%b%b%b%b%b (esperado digito '0' = 1111110)",
+    // "0" activo-alto es 1111110 (a-f encendidos, g apagado) -- ver tabla de
+    // seven_seg_hex.v en el informe seccion 2.12 -- invertido (activo-bajo,
+    // pines reales) es 0000001.
+    if ({disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b0000001)
+        $display("FAIL: op2 deberia arrancar en 0000 al entrar a SEL_OP2, magnitud obtenida %b%b%b%b%b%b%b (esperado digito '0' activo-bajo = 0000001)",
                   disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g);
     else
         $display("PASS: op2 arranca en 0000 al entrar a SEL_OP2 (reset por confirmar op1)");
@@ -144,8 +153,8 @@ initial begin
     confirmar(); // MOSTRAR -> SEL_OP, listo para una nueva operacion
     confirmar(); // SEL_OP -> SEL_OP1, esto debe resetear op1 a 0000 tambien
 
-    if ({disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g} !== 7'b0000000 ||
-        {disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b1111110)
+    if ({disp_signo_a,disp_signo_b,disp_signo_c,disp_signo_d,disp_signo_e,disp_signo_f,disp_signo_g} !== 7'b1111111 ||
+        {disp_mag_a,disp_mag_b,disp_mag_c,disp_mag_d,disp_mag_e,disp_mag_f,disp_mag_g} !== 7'b0000001)
         $display("FAIL: op1 deberia arrancar en 0000 al entrar a SEL_OP1 (segunda vez)");
     else
         $display("PASS: op1 arranca en 0000 al entrar a SEL_OP1 (segunda vez, confirma que el reset se repite en cada ciclo)");
