@@ -27,20 +27,14 @@ set_io led_overflow  60
 
 ### Botones de entrada
 #
-# !! PENDIENTE DE VERIFICAR EN LA PLACA FISICA ANTES DE LA DEMO !!
-# Los pines de Nandland (53, 51, 54, 52) NO estan en orden fisico -- no se
-# puede deducir cual switch (i_Switch_1..4 en el pinout original) es cual
-# posicion fisica (superior izq. / inferior izq. / superior der. / inferior
-# der.) solo mirando el numero de pin. El mapeo de abajo (switch 1->btn_inc,
-# 2->btn_dec, 3->btn_confirm, 4->btn_usar_ant, en el mismo orden que lista
-# Nandland) es PROVISIONAL, no una posicion fisica confirmada. Probar en la
-# placa (por ejemplo con un LED que se prenda por switch, uno a la vez) y
-# reordenar estas 4 lineas segun corresponda -- reordenar el .pcf es
-# suficiente, no hace falta tocar top_fpga.v.
-#
-# Tambien falta confirmar la POLARIDAD: top_fpga.v asume botones activo-alto
-# (comentario en el propio archivo). Si resultan activo-bajo, invertir con
-# `not` antes de cada `debouncer` en top_fpga.v (no en el .pcf).
+# Orden fisico y polaridad VERIFICADOS en la placa fisica (2026-09-08): el
+# mapeo de abajo (switch 1->btn_inc, 2->btn_dec, 3->btn_confirm,
+# 4->btn_usar_ant, en el mismo orden que lista Nandland, aunque los pines
+# 53/51/54/52 no estan en orden fisico secuencial) resulto ser el correcto
+# tal cual -- no hizo falta reordenar nada. La polaridad activo-alto que
+# asume top_fpga.v tambien resulto correcta, sin cambios. Probado con el
+# flujo completo de la calculadora (seleccionar codigo, ingresar operandos,
+# confirmar, usar resultado anterior) funcionando en hardware.
 set_io btn_inc      53
 set_io btn_dec       51
 set_io btn_confirm  54

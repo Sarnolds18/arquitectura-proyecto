@@ -98,13 +98,17 @@ make bitstream TOP=top_fpga   # icepack: genera build/top_fpga.bin
 make prog      TOP=top_fpga   # iceprog: programa la Go Board
 ```
 
-El flujo completo (`synth` → `pnr` → `bitstream`) ya se validó en este entorno:
-sintetiza sin errores y el place & route cierra timing con amplio margen sobre
-el reloj de 25 MHz de la placa. Solo `make prog` requiere la FPGA físicamente
-conectada por USB.
+El flujo completo (`synth` → `pnr` → `bitstream` → `prog`) ya se validó de
+punta a punta: sintetiza sin errores, el place & route cierra timing con
+amplio margen sobre el reloj de 25 MHz de la placa, y la calculadora se
+programó y probó en la Go Board física (2026-09-08) — las 6 operaciones, los
+2 alias, operandos negativos, overflow real y el flujo de "usar resultado
+anterior" funcionan correctamente en hardware.
 
-`constraints/go-board.pcf` ya tiene los pines reales de la Nandland Go Board
-(package VQ100) para clk, botones, LEDs y displays. Quedan 3 puntos marcados
-`!! PENDIENTE !!` en el propio archivo que solo se pueden confirmar con la
-placa en mano: orden físico de los 4 botones, polaridad de los botones y
-polaridad del display de 7 segmentos (activo-alto vs. ánodo común).
+`constraints/go-board.pcf` tiene los pines reales de la Nandland Go Board
+(package VQ100) para clk, botones, LEDs y displays, ya verificados en la
+placa física: el orden de los 4 botones y su polaridad (activo-alto)
+resultaron correctos tal cual estaban; la polaridad del display de 7
+segmentos sí estaba mal (la Go Board es de ánodo común, no activo-alto como
+se había asumido) y ya se corrigió invirtiendo las 14 salidas de segmento en
+`top_fpga.v`.

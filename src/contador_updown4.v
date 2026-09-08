@@ -5,7 +5,9 @@
 // pulso_inc / pulso_dec deben ser pulsos de 1 ciclo (salida de
 // edge_detect), no el nivel crudo del boton. Si ambos estan en 1 al
 // mismo tiempo (no deberia pasar con botones fisicos distintos),
-// incrementar tiene prioridad.
+// DISMINUIR tiene prioridad: el mux de decremento (dec0..dec3) se aplica
+// despues del de incremento (sel0..sel3), asi que su seleccion es la que
+// llega a `con_dec` cuando ambos pulsos estan activos a la vez.
 module contador_updown4(
     input        clk,
     input        pulso_inc,

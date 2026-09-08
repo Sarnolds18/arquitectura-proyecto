@@ -4,8 +4,8 @@
 // segmentos (signo + magnitud en hex para op1/op2 mientras se editan,
 // y para el resultado una vez confirmado).
 //
-// Botones de la Go Board (activo-alto asumido; ajustar polaridad segun
-// el .pcf real si son activo-bajo):
+// Botones de la Go Board (activo-alto, confirmado en la placa fisica
+// 2026-09-08 -- ver constraints/go-board.pcf):
 //   btn_inc      : superior izquierdo -> incrementar valor actual
 //   btn_dec      : inferior izquierdo -> disminuir valor actual
 //   btn_confirm  : superior derecho   -> confirmar/avanzar, y reiniciar
